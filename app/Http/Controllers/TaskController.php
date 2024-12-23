@@ -10,14 +10,14 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $tasks = Task::where('user_id', auth()->id())
         ->when($request->status, fn($q) => $q->where('status', $request->status))
         ->when($request->sort, fn($q) => $q->orderBy('due_date', $request->sort))
         ->get();
 
-        return response()->json($tasks);
+        return view('tasks.task',compact('tasks'));
     }
 
     /**
@@ -25,7 +25,7 @@ class TaskController extends Controller
      */
     public function create()
     {
-        //
+        return view('tasks.create');
     }
 
     /**
@@ -42,7 +42,8 @@ class TaskController extends Controller
     
         $task = Task::create(array_merge($validated, ['user_id' => auth()->id()]));
     
-        return response()->json($task, 201);
+        // return response()->json($task, 201);
+        return redirect()->route('tasks.index')->with('message','Task Created successfully');
     }
 
     /**
@@ -58,7 +59,8 @@ class TaskController extends Controller
      */
     public function edit(Task $task)
     {
-        //
+        $task = Task::find($task->id);
+        return view('tasks.edit',['task'=>$task]);
     }
 
     /**
@@ -73,13 +75,14 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'string|max:255',
             'description' => 'nullable|string',
-            'status' => 'in:Pending,In Progress,Completed',
+            'status' => 'in:Pending,Progress,Completed',
             'due_date' => 'date',
         ]);
     
         $task->update($validated);
     
-        return response()->json($task);
+        // return response()->json($task);
+        return redirect()->route('tasks.index')->with('message','Task Updated successfully!');
     }
 
     /**
@@ -93,6 +96,7 @@ class TaskController extends Controller
     
         $task->delete();
     
-        return response()->json(['message' => 'Task deleted successfully']);
+        // return response()->json(['message' => 'Task deleted successfully']);
+        return redirect()->back()->with('message','Task deleted successfully');
     }
 }
