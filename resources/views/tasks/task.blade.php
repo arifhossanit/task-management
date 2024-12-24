@@ -22,6 +22,7 @@
         <!-- Task Filters -->
         <form method="GET" action="{{ route('tasks.index') }}" class="mb-3">
             <div class="row">
+                <!-- Filter by Status -->
                 <div class="col-md-4">
                     <select name="status" class="form-select" onchange="this.form.submit()">
                         <option value="">All Statuses</option>
@@ -30,9 +31,17 @@
                         <option value="Completed" {{ request('status') == 'Completed' ? 'selected' : '' }}>Completed</option>
                     </select>
                 </div>
+                <!-- Sort by Due Date -->
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="">Sort by Due Date</option>
+                        <option value="asc" {{ request('sort') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                        <option value="desc" {{ request('sort') == 'desc' ? 'selected' : '' }}>Descending</option>
+                    </select>
                 </div>
+                <!-- <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div> -->
             </div>
         </form>
 

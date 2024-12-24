@@ -17,6 +17,11 @@ class TaskController extends Controller
         ->when($request->sort, fn($q) => $q->orderBy('due_date', $request->sort))
         ->get();
 
+        // Check if the request expects a JSON response
+        if ($request->wantsJson()) {
+            return response()->json($tasks, 200);
+        }
+        // Default response for web (view)
         return view('tasks.task',compact('tasks'));
     }
 
@@ -36,13 +41,20 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:Pending,In Progress,Completed',
+            'status' => 'required|in:Pending,Progress,Completed',
             'due_date' => 'required|date',
         ]);
     
         $task = Task::create(array_merge($validated, ['user_id' => auth()->id()]));
     
-        // return response()->json($task, 201);
+        // Check if the request expects a JSON response
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Task created successfully',
+                'task' => $task,
+            ], 201);
+        }
+        // Default response for we
         return redirect()->route('tasks.index')->with('message','Task Created successfully');
     }
 
@@ -60,6 +72,24 @@ class TaskController extends Controller
     public function edit(Task $task)
     {
         $task = Task::find($task->id);
+
+        if (!$task) {
+            // Handle not found case
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Task not found'], 404);
+            }
+            return redirect()->route('tasks.index')->with('error', 'Task not found');
+        }
+        
+        // Handle response based on request type
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Task retrieved successfully',
+                'task' => $task,
+            ], 200);
+        }
+
+        // For web requests, return the edit view
         return view('tasks.edit',['task'=>$task]);
     }
 
@@ -69,6 +99,9 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         if ($task->user_id !== auth()->id()) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             return response()->json(['error' => 'Unauthorized'], 403);
         }
     
@@ -81,7 +114,14 @@ class TaskController extends Controller
     
         $task->update($validated);
     
-        // return response()->json($task);
+        // Check if the request expects a JSON response
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Task updated successfully',
+                'task' => $task,
+            ], 200);
+        }
+        // Default response for web
         return redirect()->route('tasks.index')->with('message','Task Updated successfully!');
     }
 
@@ -91,12 +131,19 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         if ($task->user_id !== auth()->id()) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
             return response()->json(['error' => 'Unauthorized'], 403);
         }
     
         $task->delete();
     
-        // return response()->json(['message' => 'Task deleted successfully']);
+        // Check if the request expects a JSON response
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Task deleted successfully'], 200);
+        }
+        // Default response for web
         return redirect()->back()->with('message','Task deleted successfully');
     }
 }
